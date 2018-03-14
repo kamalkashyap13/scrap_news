@@ -4,6 +4,7 @@ from sqlite3 import OperationalError
 import datetime
 import timeit
 import spacy
+from random import randint
 
 nlp = spacy.load('en')
 
@@ -19,7 +20,7 @@ state4 = 'SELECT MAX(id) from news_articlecontent'
 state5 = 'SELECT MAX(id) from news_wordsindex'
 state6 = 'SELECT MAX(id) from news_articlewords'
 state7 = 'SELECT MAX(id) from news_articlefacts'
-
+state8 = 'SELECT MAX(id) from news_articlegrammar'
 
 today = str(datetime.date.today())
 
@@ -77,10 +78,27 @@ class QuotesSpider(scrapy.Spider):
                 max_id = max_result[0][0]
                 max_id += 1
                 ro = "INSERT INTO news_articlecontent VALUES (%d,%d,'%s')" % (max_id,article_id,paragraph[j])
+                self.log("0987654321")
                 self.log(ro)
                 cursor.execute(str(ro)) #error
                 conn.commit()
                 doc = nlp(paragraph[j])
+                if j == 1:
+                    text = grammar_quiz(paragraph[j])
+                    self.log("123456789123456789")
+                    self.log (text)
+                    if text!=-1:
+                        cursor.execute(state8)
+                        max_result = cursor.fetchall()
+                        max_id = max_result[0][0]
+                        if max_id is None:
+                            max_id = 1
+                        else:
+                            max_id += 1
+                        ro = "INSERT INTO news_articlegrammar VALUES (%d,'%s','%s', %d)" % (max_id, paragraph[j], text[0], article_id, text[1] )
+                        self.log(ro)
+                        cursor.execute(str(ro))  # error
+                        conn.commit()
                 for token in doc:
                     if token.tag_ == 'NNP':
                         word = token.text
@@ -122,7 +140,31 @@ class QuotesSpider(scrapy.Spider):
                         conn.commit()
 
 
+prepos_li = ["in","on","for","at","since","while","upon","beneath"]
 
+
+def grammar_quiz(text):
+    doc = nlp(text)
+    count = 0
+    for token in doc:
+        if token.tag_ == 'IN':
+            word = token.text
+            if word in prepos_li:
+                count+=1
+                pos = other_word(prepos_li,word)
+                ind = text.index(" " + word + " ")
+                text = text[:ind] + " " + prepos_li[pos]  + text[ind+len(word)+1:]
+    if count==0:
+        return -1
+    gav = [text,count]
+    return gav
+
+def other_word(li,word):
+    ind = randint(0, len(li)-1)
+    pos = li.index(word)
+    while pos == ind:
+        ind = randint(0, len(li)-1)
+    return ind
 
 
 #https://stackoverflow.com/questions/45575608/python-sqlite-operationalerror-near-s-syntax-error
@@ -133,3 +175,5 @@ class QuotesSpider(scrapy.Spider):
 #techcrunch
 #.post-title a
 # how to work on inside a parag
+
+

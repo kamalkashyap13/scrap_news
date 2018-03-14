@@ -17,7 +17,8 @@ today = str(datetime.date.today())
 
 
 
-url = 'http://www.thehindu.com/sci-tech/science/?page='
+url1 = 'http://www.thehindu.com/sci-tech/science/?page='
+url = 'http://www.thehindu.com/sport/?page='
 class QuotesSpider(scrapy.Spider):
     name = "speakli_src"
 
